@@ -7,7 +7,7 @@ import path from 'path';
 import { ArchivosEntity } from './entities/archivos.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { generarSufijoArchivo, moverArchivo } from 'src/common/utils';
+import { generarSufijoArchivo, moverArchivo, formatFilenameSolped, formatFilename } from 'src/common/utils';
 import { DateTime } from 'luxon';
 
 @Injectable()
@@ -49,8 +49,8 @@ export class AlfrescoService {
         this.localFileErrorMM = this.configService.get<string>('ALFRESCO_LOCAL_ERROR_MM')!;
 
         this.nodo_SOLPED = this.configService.get<string>('ALFRESCO_NODO_SOLPED')!;
-        this.nodo_PEDIDOS = this.configService.get<string>('ALFRESCO_NODO_PEDIDOS')!;
-        this.nodo_CONTRATOS = this.configService.get<string>('ALFRESCO_NODO_CONTRATOS')!;
+        this.nodo_PEDIDOS = this.configService.get<string>('ALFRESCO_NODO_PEDIDO')!;
+        this.nodo_CONTRATOS = this.configService.get<string>('ALFRESCO_NODO_CONTRATO')!;
         this.nodo_HES = this.configService.get<string>('ALFRESCO_NODO_HES')!;
         this.nodo_FI = this.configService.get<string>('ALFRESCO_NODO_FI')!;
 
@@ -95,34 +95,53 @@ export class AlfrescoService {
         const password = this.password!;
         let localFilePath = ''
 
-        switch (folder) {
-            case 'FI':
-                url = this.urlAlfresco! + this.nodo_FI + endpoint;
-                localFilePath = uploadFolderFI + filePath
-                break;
-            case 'SOLPED':
-                url = this.urlAlfresco! + this.nodo_SOLPED + endpoint;
-                localFilePath = uploadFolderMM + folder + '\\' + filePath
-                break;
-            case 'PEDIDOS':
-                url = this.urlAlfresco! + this.nodo_PEDIDOS + endpoint;
-                localFilePath = uploadFolderMM + folder + '\\' + filePath
-                break;
-            case 'CONTRATOS':
-                url = this.urlAlfresco! + this.nodo_CONTRATOS + endpoint;
-                localFilePath = uploadFolderMM + folder + '\\' + filePath
-                break;
-            case 'HES':
-                url = this.urlAlfresco! + this.nodo_HES + endpoint;
-                localFilePath = uploadFolderMM + folder + '\\' + filePath
-                break;
-        }
-
         try {
+
+            switch (folder) {
+                case 'FI':
+                    url = this.urlAlfresco! + this.nodo_FI + endpoint;
+                    localFilePath = uploadFolderFI + filePath
+                    break;
+                case 'SOLPED':
+                    url = this.urlAlfresco! + this.nodo_SOLPED + endpoint;
+                    localFilePath = uploadFolderMM + folder + '\\' + filePath
+                    break;
+                case 'PEDIDOS':
+                    url = this.urlAlfresco! + this.nodo_PEDIDOS + endpoint;
+                    localFilePath = uploadFolderMM + folder + '\\' + filePath
+                    break;
+                case 'CONTRATOS':
+                    url = this.urlAlfresco! + this.nodo_CONTRATOS + endpoint;
+                    localFilePath = uploadFolderMM + folder + '\\' + filePath
+                    break;
+                case 'HES':
+                    url = this.urlAlfresco! + this.nodo_HES + endpoint;
+                    localFilePath = uploadFolderMM + folder + '\\' + filePath
+                    break;
+            }
+
             const form = new FormData()
 
+            let resultSolped = formatFilenameSolped(filePath)
+            let result = formatFilename(filePath)
+            let nameFile = ''
+            //const result = folder == 'SOLPED' ? formatFilenameSolped(filePath) : formatFilename(filePath)
+            //const nameFile = folder == 'SOLPED' ? `${result.numeroDoc}-${result.numeroPosicion}` : `${result.numeroDoc}`
+
+            if(folder == 'SOLPED'){
+                nameFile = `${resultSolped.numeroDoc}-${resultSolped.numeroPosicion}`
+            }
+            else if (folder == 'FI'){
+                nameFile = filePath.slice(0,14)
+            }
+            else{
+                nameFile = `${result.numeroDoc}`
+            }
+
+            console.log('namefile:  '+nameFile)
+
             form.append('filedata', fs.createReadStream(localFilePath))
-            form.append('name', filePath.slice(0, 14) + stringRandom + filePath.slice(-4))
+            form.append('name', nameFile +'-'+ stringRandom + filePath.slice(-4))
             form.append('nodeType', 'cm:content')
 
             const response = await axios.post(url, form, {
@@ -130,7 +149,7 @@ export class AlfrescoService {
                 headers: { Accept: 'multipart/form-data' },
             });
 
-            await this.saveNodeToDatabase(response.data.entry,folder,tipoDoc)
+            await this.saveNodeToDatabase(response.data.entry,filePath,folder,tipoDoc)
             //return response.data.entry.id
         }
         catch (error) {
@@ -162,12 +181,19 @@ export class AlfrescoService {
                 moverArchivo(file, this.localFilePathFI, this.localFileErrorFI, 'Archivo movido a la carpeta ERRORFILE\DOCUMENTOSFI:')
                 console.error(`El archivo no esta en formato PDF o no tiene el formato de titulo correcto: "${file}"`);
             }
+            //console.log(file)
         }
         for (const file of filesMMSolped) {
             let stringRandom = generarSufijoArchivo()
 
-            if (file.toLowerCase().endsWith('.pdf') && file.length == 18) {
+            const result = formatFilenameSolped(file)
+            const nameFile = `${result.numeroDoc}-${result.numeroPosicion}-${result.numeroArchivo}${result.extension}`
+            
+            //console.log(nameFile)
+            
+            if (file.toLowerCase().endsWith('.pdf') && nameFile.length == 24 && result.numeroDoc?.length == 10) {
                 await this.uploadFileToAlfresco(file, stringRandom,'SOLPED','SOLPED'); // espera a que suba antes de continuar
+                
             }
             else {
                 //this.moverArchivoError(file)
@@ -178,7 +204,12 @@ export class AlfrescoService {
         for (const file of filesMMPedidos) {
             let stringRandom = generarSufijoArchivo()
 
-            if (file.toLowerCase().endsWith('.pdf') && file.length == 14) {
+            const result = formatFilename(file)
+            const nameFile = `${result.numeroDoc}-${result.numeroArchivo}${result.extension}`
+            
+            //console.log(nameFile)
+
+            if (file.toLowerCase().endsWith('.pdf') && nameFile.length == 19 && result.numeroDoc?.length == 10) {
                 await this.uploadFileToAlfresco(file, stringRandom,'PEDIDOS','OC'); // espera a que suba antes de continuar
             }
             else {
@@ -190,7 +221,12 @@ export class AlfrescoService {
         for (const file of filesMMContratos) {
             let stringRandom = generarSufijoArchivo()
 
-            if (file.toLowerCase().endsWith('.pdf') && file.length == 14) {
+            const result = formatFilename(file)
+            const nameFile = `${result.numeroDoc}-${result.numeroArchivo}${result.extension}`
+            
+            //console.log(nameFile)
+
+            if (file.toLowerCase().endsWith('.pdf') && nameFile.length == 19 && result.numeroDoc?.length == 10) {
                 await this.uploadFileToAlfresco(file, stringRandom,'CONTRATOS','CONTR'); // espera a que suba antes de continuar
             }
             else {
@@ -202,7 +238,12 @@ export class AlfrescoService {
         for (const file of filesMMHes) {
             let stringRandom = generarSufijoArchivo()
 
-            if (file.toLowerCase().endsWith('.pdf') && file.length == 14) {
+            const result = formatFilename(file)
+            const nameFile = `${result.numeroDoc}-${result.numeroArchivo}${result.extension}`
+            
+            //console.log(nameFile)
+
+            if (file.toLowerCase().endsWith('.pdf') && nameFile.length == 19 && result.numeroDoc?.length == 10) {
                 await this.uploadFileToAlfresco(file, stringRandom,'HES','HES'); // espera a que suba antes de continuar
             }
             else {
@@ -217,9 +258,61 @@ export class AlfrescoService {
      * Metodo para guardar el archivo cargado a alfresco, en la base de datos sql en la tabla sap_int_digita_doc
      * @param id_node luego de creado el nodo en alfresco y subir el archivo el endpoint de alfresco devuelve el id del archivo, aqui se manda el objeto devuelto por alfresco
      */
-    async saveNodeToDatabase(id_node, folder:string, tipoDoc: string) {
+    async saveNodeToDatabase(id_node,file, folder:string, tipoDoc: string) {
 
         const tdocumento = ''
+        //console.log(id_node)
+        let posicionAnio = ''
+        let dDocumento = ''
+
+        let partes = id_node.name.split('-')
+
+        /*if (id_node.name.includes('-')){
+            const partes = id_node.name.split('-')
+            if(partes.length >= 3){
+                posicionAnio = partes[1].slice(0,4)
+                dDocumento = 'Doc-' + id_node.name.slice(0, -4)
+                console.log(posicionAnio)
+                console.log(dDocumento)
+            }
+            posicionAnio = ''
+            dDocumento = 'Doc-' + id_node.name.slice(0, -4)
+            console.log(posicionAnio)
+                console.log(dDocumento)
+        }
+        else {
+            posicionAnio = id_node.name.split(-4)
+            dDocumento = 'Doc-' + id_node.name.slice(0, 10) + "-" + id_node.name.slice(10, 14) + "-" + id_node.name.slice(14, 18)
+            console.log(posicionAnio)
+                console.log(dDocumento)
+        }*/
+
+        if (folder == 'FI'){
+            posicionAnio = id_node.name.slice(10, 14)
+            dDocumento = 'Doc-' + id_node.name.slice(0, 10) + "-" + id_node.name.slice(10, 14) + id_node.name.slice(14, 19)
+            //console.log(posicionAnio)
+            //console.log(dDocumento)
+        }
+        else if (folder == 'SOLPED'){
+            partes = id_node.name.split('-')
+            posicionAnio = partes[1].slice(0,4)
+            dDocumento = 'Doc-' + id_node.name.slice(0, -4)
+        }
+        else{
+            posicionAnio = '0000'
+            dDocumento = 'Doc-' + id_node.name.slice(0, -4)
+        }
+
+        /*let resultSolped = formatFilenameSolped(id_node.name)
+        let result = formatFilename(id_node.name)
+        let nameFile = ''
+
+        if(folder == 'SOLPED'){
+            nameFile = `${resultSolped.numeroDoc}-${resultSolped.numeroPosicion}`
+        }
+        else {
+            nameFile = `${result.numeroDoc}`
+        }*/
 
         const date = new Date().toISOString().slice(0, 10);
 
@@ -227,9 +320,9 @@ export class AlfrescoService {
 
         const mapped = this.nodeRepository.create({
             Sociedad: 'PE10',
-            CAnio: id_node.name.slice(10, 14),
+            CAnio: posicionAnio,
             Ndocumento: id_node.name.slice(0, 10),
-            Ddocumento: 'Doc-' + id_node.name.slice(0, 10) + "-" + id_node.name.slice(10, 14) + "-" + id_node.name.slice(14, 18),
+            Ddocumento: dDocumento,
             IDAlfresco: id_node.id,
             DUrl: this.urlPDF + id_node.id,
             Clase_Doc: '',
@@ -248,19 +341,19 @@ export class AlfrescoService {
         //this.moverArchivoBackup(id_node.name.slice(0, 14) + id_node.name.slice(-4))
         switch (folder) {
             case 'FI':
-                moverArchivo(id_node.name.slice(0, 14) + id_node.name.slice(-4), this.localFilePathFI, this.localFileBackupFI, 'Archivo movido a la carpeta BACKUP_GENERAL/DOCUMENTOSFI:')
+                moverArchivo(file, this.localFilePathFI, this.localFileBackupFI, 'Archivo movido a la carpeta BACKUP_GENERAL/DOCUMENTOSFI:')
                 break;
             case 'SOLPED':
-                moverArchivo(id_node.name.slice(0, 14) + id_node.name.slice(-4), this.localFilePathMM!+folder + '\\', this.localFileBackupMM+folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/SOLPED:')
+                moverArchivo(file, this.localFilePathMM!+folder + '\\', this.localFileBackupMM+folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/SOLPED:')
                 break;
             case 'PEDIDOS':
-                moverArchivo(id_node.name.slice(0, 14) + id_node.name.slice(-4), this.localFilePathMM!+folder + '\\', this.localFileBackupMM+folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/PEDIDOS:')
+                moverArchivo(file, this.localFilePathMM!+folder + '\\', this.localFileBackupMM+folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/PEDIDOS:')
                 break;
             case 'CONTRATOS':
-                moverArchivo(id_node.name.slice(0, 14) + id_node.name.slice(-4), this.localFilePathMM!+folder + '\\', this.localFileBackupMM+folder + '\\', 'Archivo movido a la carpeta CONTRATOS:')
+                moverArchivo(file, this.localFilePathMM!+folder + '\\', this.localFileBackupMM+folder + '\\', 'Archivo movido a la carpeta CONTRATOS:')
                 break;
             case 'HES':
-                moverArchivo(id_node.name.slice(0, 14) + id_node.name.slice(-4), this.localFilePathMM!+folder + '\\', this.localFileBackupMM+folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/HES:')
+                moverArchivo(file, this.localFilePathMM!+folder + '\\', this.localFileBackupMM+folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/HES:')
                 break;
         }
         
