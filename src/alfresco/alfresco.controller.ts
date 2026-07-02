@@ -9,8 +9,7 @@ import { diskStorage } from 'multer';
 @Controller('nodo')
 export class AlfrescoController {
 
-    constructor(private readonly alfrescoService: AlfrescoService) 
-    {}
+    constructor(private readonly alfrescoService: AlfrescoService) { }
 
     @Get()
     async getNodeAlfresco() {
@@ -29,11 +28,11 @@ export class AlfrescoController {
     })
     async uploadFile() {
         try {
-        const result = await this.alfrescoService.uploadAllFiles();
-        return result; // Aquí puedes retornar la respuesta de Alfresco
+            const result = await this.alfrescoService.uploadAllFiles();
+            return result; // Aquí puedes retornar la respuesta de Alfresco
         } catch (error) {
-        console.error('Detalle del error al subir a Alfresco:', error.message);
-  throw new Error('No se pudo subir el archivo a Alfresco');
+            console.error('Detalle del error al subir a Alfresco:', error.message);
+            throw new Error('No se pudo subir el archivo a Alfresco');
         }
     }
 }

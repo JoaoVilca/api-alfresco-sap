@@ -83,7 +83,7 @@ export class AlfrescoService {
      * @param stringRandom cadena de 4 caracteres alfanumericos random para complementar el nombre del archivo en Alfresco y no se repita en caso el usuario suba otro
      * otro archivo diferente para el mismo documento sap
      */
-    async uploadFileToAlfresco(filePath: string, stringRandom: string, folder: string, tipoDoc:string) {
+    async uploadFileToAlfresco(filePath: string, stringRandom: string, folder: string, tipoDoc: string) {
 
         const uploadFolderFI = this.localFilePathFI!
         const uploadFolderMM = this.localFilePathMM!
@@ -128,20 +128,21 @@ export class AlfrescoService {
             //const result = folder == 'SOLPED' ? formatFilenameSolped(filePath) : formatFilename(filePath)
             //const nameFile = folder == 'SOLPED' ? `${result.numeroDoc}-${result.numeroPosicion}` : `${result.numeroDoc}`
 
-            if(folder == 'SOLPED'){
-                nameFile = `${resultSolped.numeroDoc}-${resultSolped.numeroPosicion}`
+            if (folder == 'SOLPED') {
+                //nameFile = `${resultSolped.numeroDoc}-${resultSolped.numeroPosicion}`
+                nameFile = `${result.numeroDoc}-${stringRandom}-${result.nombreArchivo}${result.extension}`
             }
-            else if (folder == 'FI'){
-                nameFile = filePath.slice(0,14)
+            else if (folder == 'FI') {
+                nameFile = filePath.slice(0, 14) + '-' + stringRandom + filePath.slice(-4)
             }
-            else{
-                nameFile = `${result.numeroDoc}`
+            else {
+                nameFile = `${result.numeroDoc}-${stringRandom}-${result.nombreArchivo}${result.extension}`
             }
 
-            console.log('namefile:  '+nameFile)
+            console.log('namefile:  ' + nameFile)
 
             form.append('filedata', fs.createReadStream(localFilePath))
-            form.append('name', nameFile +'-'+ stringRandom + filePath.slice(-4))
+            form.append('name', nameFile)
             form.append('nodeType', 'cm:content')
 
             const response = await axios.post(url, form, {
@@ -149,7 +150,7 @@ export class AlfrescoService {
                 headers: { Accept: 'multipart/form-data' },
             });
 
-            await this.saveNodeToDatabase(response.data.entry,filePath,folder,tipoDoc)
+            await this.saveNodeToDatabase(response.data.entry, filePath, folder, tipoDoc)
             //return response.data.entry.id
         }
         catch (error) {
@@ -165,10 +166,10 @@ export class AlfrescoService {
     async uploadAllFiles() {
 
         const filesFI = fs.readdirSync(this.localFilePathFI);
-        const filesMMSolped = fs.readdirSync(this.localFilePathMM!+'SOLPED'+'\\');
-        const filesMMPedidos = fs.readdirSync(this.localFilePathMM!+'PEDIDOS'+'\\');
-        const filesMMContratos = fs.readdirSync(this.localFilePathMM!+'CONTRATOS'+'\\');
-        const filesMMHes = fs.readdirSync(this.localFilePathMM!+'HES'+'\\');
+        const filesMMSolped = fs.readdirSync(this.localFilePathMM! + 'SOLPED' + '\\');
+        const filesMMPedidos = fs.readdirSync(this.localFilePathMM! + 'PEDIDOS' + '\\');
+        const filesMMContratos = fs.readdirSync(this.localFilePathMM! + 'CONTRATOS' + '\\');
+        const filesMMHes = fs.readdirSync(this.localFilePathMM! + 'HES' + '\\');
 
         for (const file of filesFI) {
             let stringRandom = generarSufijoArchivo()
@@ -183,21 +184,22 @@ export class AlfrescoService {
             }
             //console.log(file)
         }
+
         for (const file of filesMMSolped) {
             let stringRandom = generarSufijoArchivo()
 
-            const result = formatFilenameSolped(file)
-            const nameFile = `${result.numeroDoc}-${result.numeroPosicion}-${result.numeroArchivo}${result.extension}`
-            
-            //console.log(nameFile)
-            
-            if (file.toLowerCase().endsWith('.pdf') && nameFile.length == 24 && result.numeroDoc?.length == 10) {
-                await this.uploadFileToAlfresco(file, stringRandom,'SOLPED','SOLPED'); // espera a que suba antes de continuar
-                
+            const result = formatFilename(file)
+            const nameFile = `${result.numeroDoc}-${result.nombreArchivo}${result.extension}`
+
+            console.log(result.extension+'alfresco')
+
+            if ((result.extension == '.pdf' || result.extension == '.docx' || result.extension == '.xlsx') && result.numeroDoc?.length == 10 && result.nombreArchivo?.length! <= 30) {
+                await this.uploadFileToAlfresco(file, stringRandom, 'SOLPED', 'SOLPED'); // espera a que suba antes de continuar
+
             }
             else {
                 //this.moverArchivoError(file)
-                moverArchivo(file, this.localFilePathMM+'SOLPED\\', this.localFileErrorMM+'SOLPED\\', 'Archivo movido a la carpeta ERRORFILE\DOCUMENTOSMM\SOLPED:')
+                moverArchivo(file, this.localFilePathMM + 'SOLPED\\', this.localFileErrorMM + 'SOLPED\\', 'Archivo movido a la carpeta ERRORFILE\DOCUMENTOSMM\SOLPED:')
                 console.error(`El archivo no esta en formato PDF o no tiene el formato de titulo correcto: "${file}"`);
             }
         }
@@ -205,12 +207,12 @@ export class AlfrescoService {
             let stringRandom = generarSufijoArchivo()
 
             const result = formatFilename(file)
-            const nameFile = `${result.numeroDoc}-${result.numeroArchivo}${result.extension}`
-            
-            //console.log(nameFile)
+            const nameFile = `${result.numeroDoc}-${result.nombreArchivo}${result.extension}`
 
-            if (file.toLowerCase().endsWith('.pdf') && nameFile.length == 19 && result.numeroDoc?.length == 10) {
-                await this.uploadFileToAlfresco(file, stringRandom,'PEDIDOS','OC'); // espera a que suba antes de continuar
+            //console.log(result)
+
+            if ((result.extension == '.pdf' || result.extension == '.docx' || result.extension == '.xlsx') && result.numeroDoc?.length == 10 && result.nombreArchivo!.length! <= 30) {
+                await this.uploadFileToAlfresco(file, stringRandom, 'PEDIDOS', 'OC'); // espera a que suba antes de continuar
             }
             else {
                 //this.moverArchivoError(file)
@@ -222,16 +224,16 @@ export class AlfrescoService {
             let stringRandom = generarSufijoArchivo()
 
             const result = formatFilename(file)
-            const nameFile = `${result.numeroDoc}-${result.numeroArchivo}${result.extension}`
-            
+            const nameFile = `${result.numeroDoc}-${result.nombreArchivo}${result.extension}`
+
             //console.log(nameFile)
 
-            if (file.toLowerCase().endsWith('.pdf') && nameFile.length == 19 && result.numeroDoc?.length == 10) {
-                await this.uploadFileToAlfresco(file, stringRandom,'CONTRATOS','CONTR'); // espera a que suba antes de continuar
+            if ((result.extension == '.pdf' || result.extension == '.docx' || result.extension == '.xlsx') && result.numeroDoc?.length == 10 && result.nombreArchivo?.length! <= 30) {
+                await this.uploadFileToAlfresco(file, stringRandom, 'CONTRATOS', 'CONTR'); // espera a que suba antes de continuar
             }
             else {
                 //this.moverArchivoError(file)
-                moverArchivo(file, this.localFilePathMM +'CONTRATOS\\', this.localFileErrorMM +'CONTRATOS\\', 'Archivo movido a la carpeta ERRORFILE\DOCUMENTOSMM\CONTRATOS:')
+                moverArchivo(file, this.localFilePathMM + 'CONTRATOS\\', this.localFileErrorMM + 'CONTRATOS\\', 'Archivo movido a la carpeta ERRORFILE\DOCUMENTOSMM\CONTRATOS:')
                 console.error(`El archivo no esta en formato PDF o no tiene el formato de titulo correcto: "${file}"`);
             }
         }
@@ -239,16 +241,16 @@ export class AlfrescoService {
             let stringRandom = generarSufijoArchivo()
 
             const result = formatFilename(file)
-            const nameFile = `${result.numeroDoc}-${result.numeroArchivo}${result.extension}`
-            
+            const nameFile = `${result.numeroDoc}-${result.nombreArchivo}${result.extension}`
+
             //console.log(nameFile)
 
-            if (file.toLowerCase().endsWith('.pdf') && nameFile.length == 19 && result.numeroDoc?.length == 10) {
-                await this.uploadFileToAlfresco(file, stringRandom,'HES','HES'); // espera a que suba antes de continuar
+            if ((result.extension == '.pdf' || result.extension == '.docx' || result.extension == '.xlsx') && result.numeroDoc?.length == 10 && result.nombreArchivo?.length! <= 30) {
+                await this.uploadFileToAlfresco(file, stringRandom, 'HES', 'HES'); // espera a que suba antes de continuar
             }
             else {
                 //this.moverArchivoError(file)
-                moverArchivo(file, this.localFilePathMM +'HES\\', this.localFileErrorMM +'HES\\', 'Archivo movido a la carpeta ERRORFILE\DOCUMENTOSMM\HES:')
+                moverArchivo(file, this.localFilePathMM + 'HES\\', this.localFileErrorMM + 'HES\\', 'Archivo movido a la carpeta ERRORFILE\DOCUMENTOSMM\HES:')
                 console.error(`El archivo no esta en formato PDF o no tiene el formato de titulo correcto: "${file}"`);
             }
         }
@@ -258,7 +260,7 @@ export class AlfrescoService {
      * Metodo para guardar el archivo cargado a alfresco, en la base de datos sql en la tabla sap_int_digita_doc
      * @param id_node luego de creado el nodo en alfresco y subir el archivo el endpoint de alfresco devuelve el id del archivo, aqui se manda el objeto devuelto por alfresco
      */
-    async saveNodeToDatabase(id_node,file, folder:string, tipoDoc: string) {
+    async saveNodeToDatabase(id_node, file, folder: string, tipoDoc: string) {
 
         const tdocumento = ''
         //console.log(id_node)
@@ -267,52 +269,25 @@ export class AlfrescoService {
 
         let partes = id_node.name.split('-')
 
-        /*if (id_node.name.includes('-')){
-            const partes = id_node.name.split('-')
-            if(partes.length >= 3){
-                posicionAnio = partes[1].slice(0,4)
-                dDocumento = 'Doc-' + id_node.name.slice(0, -4)
-                console.log(posicionAnio)
-                console.log(dDocumento)
-            }
-            posicionAnio = ''
-            dDocumento = 'Doc-' + id_node.name.slice(0, -4)
-            console.log(posicionAnio)
-                console.log(dDocumento)
-        }
-        else {
-            posicionAnio = id_node.name.split(-4)
-            dDocumento = 'Doc-' + id_node.name.slice(0, 10) + "-" + id_node.name.slice(10, 14) + "-" + id_node.name.slice(14, 18)
-            console.log(posicionAnio)
-                console.log(dDocumento)
-        }*/
+        let result = formatFilenameSolped(id_node.name)
+        console.log(result)
 
-        if (folder == 'FI'){
+        if (folder == 'FI') {
             posicionAnio = id_node.name.slice(10, 14)
             dDocumento = 'Doc-' + id_node.name.slice(0, 10) + "-" + id_node.name.slice(10, 14) + id_node.name.slice(14, 19)
             //console.log(posicionAnio)
             //console.log(dDocumento)
         }
-        else if (folder == 'SOLPED'){
-            partes = id_node.name.split('-')
-            posicionAnio = partes[1].slice(0,4)
-            dDocumento = 'Doc-' + id_node.name.slice(0, -4)
-        }
-        else{
+        else if (folder == 'SOLPED') {
+            //partes = id_node.name.split('-')
+            //posicionAnio = partes[1].slice(0, 4)
             posicionAnio = '0000'
-            dDocumento = 'Doc-' + id_node.name.slice(0, -4)
-        }
-
-        /*let resultSolped = formatFilenameSolped(id_node.name)
-        let result = formatFilename(id_node.name)
-        let nameFile = ''
-
-        if(folder == 'SOLPED'){
-            nameFile = `${resultSolped.numeroDoc}-${resultSolped.numeroPosicion}`
+            dDocumento = `${result.numeroDoc}-${result.random}-${result.nombre}`
         }
         else {
-            nameFile = `${result.numeroDoc}`
-        }*/
+            posicionAnio = '0000'
+            dDocumento = `${result.numeroDoc}-${result.random}-${result.nombre}`
+        }
 
         const date = new Date().toISOString().slice(0, 10);
 
@@ -344,19 +319,19 @@ export class AlfrescoService {
                 moverArchivo(file, this.localFilePathFI, this.localFileBackupFI, 'Archivo movido a la carpeta BACKUP_GENERAL/DOCUMENTOSFI:')
                 break;
             case 'SOLPED':
-                moverArchivo(file, this.localFilePathMM!+folder + '\\', this.localFileBackupMM+folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/SOLPED:')
+                moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/SOLPED:')
                 break;
             case 'PEDIDOS':
-                moverArchivo(file, this.localFilePathMM!+folder + '\\', this.localFileBackupMM+folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/PEDIDOS:')
+                moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/PEDIDOS:')
                 break;
             case 'CONTRATOS':
-                moverArchivo(file, this.localFilePathMM!+folder + '\\', this.localFileBackupMM+folder + '\\', 'Archivo movido a la carpeta CONTRATOS:')
+                moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/CONTRATOS:')
                 break;
             case 'HES':
-                moverArchivo(file, this.localFilePathMM!+folder + '\\', this.localFileBackupMM+folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/HES:')
+                moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/HES:')
                 break;
         }
-        
+
     }
 
 }

@@ -1,11 +1,11 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { CronJob } from 'cron';
 import { DateTime } from 'luxon';
-import { AlfrescoService } from 'src/alfresco/alfresco.service';
+import { AzureStorageService } from 'src/azure-storage/azure-storage.service';
 
 @Injectable()
 export class TareasService implements OnModuleInit {
-  constructor(private readonly alfrescoService: AlfrescoService) { }
+  constructor(private readonly azureStorageService: AzureStorageService) { }
 
   onModuleInit() {
     const job = new CronJob(
@@ -22,7 +22,7 @@ export class TareasService implements OnModuleInit {
         //console.log(fecha + ' ' + hora)
         //console.log(fechaCompleta)
 
-        this.alfrescoService.uploadAllFiles();
+        this.azureStorageService.uploadAllFiles();
       },
       null,            // onComplete
       true,            // start

@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, PrimaryColumn } from 'typeorm';
 
-@Entity('sap_int_digita_doc2')
+@Entity('sap_int_digita_doc')
 export class ArchivosEntity {
 
     @PrimaryGeneratedColumn({ type: 'numeric' })

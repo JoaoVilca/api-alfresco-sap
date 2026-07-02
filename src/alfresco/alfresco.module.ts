@@ -7,7 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 @Module({
   controllers: [AlfrescoController],
   providers: [AlfrescoService],
-  imports: [TypeOrmModule.forFeature([ArchivosEntity])],
-  exports: [AlfrescoService]
+  //imports: [TypeOrmModule.forFeature([ArchivosEntity])],
+  //exports: [AlfrescoService]
 })
 export class AlfrescoModule {}
