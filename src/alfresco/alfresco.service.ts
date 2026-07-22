@@ -77,6 +77,21 @@ export class AlfrescoService {
         return response.data;
     }
 
+    async getAlfrescoFile(nodo): Promise<any[]> {
+
+        const endpoint = '/content'
+
+        const url = this.urlAlfrescoGet! + nodo + endpoint;
+        const username = this.username!;
+        const password = this.password!;
+
+        const response = await axios.get(url, {
+            auth: { username, password },
+            //headers: { Accept: 'application/json' },
+        });
+        return response.data;
+    }
+
     /**
      * Metodo para cargar archivo local a Alfresco usando su endpoint para crear nodo
      * @param filePath ruta de archivo PDF

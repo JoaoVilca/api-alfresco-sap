@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UploadedFile } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UploadedFile } from '@nestjs/common';
 import { AlfrescoService } from './alfresco.service';
 import { ApiBasicAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
@@ -12,8 +12,8 @@ export class AlfrescoController {
     constructor(private readonly alfrescoService: AlfrescoService) { }
 
     @Get()
-    async getNodeAlfresco() {
-        return this.alfrescoService.fetchAlfrescoData();
+    async getNodeAlfresco(@Query('nodo') nodo: string,) {
+        return this.alfrescoService.getAlfrescoFile(nodo);
     }
 
     @Post('upload-to-alfresco')

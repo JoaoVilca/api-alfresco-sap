@@ -7,7 +7,7 @@ import { ArchivosEntity } from './entities/archivos.entity';
 @Module({
   providers: [AzureStorageService],
   controllers: [AzureStorageController],
-  imports: [TypeOrmModule.forFeature([ArchivosEntity])],
-  exports: [AzureStorageService],
+  //imports: [TypeOrmModule.forFeature([ArchivosEntity])],
+  //exports: [AzureStorageService],
 })
 export class AzureStorageModule {}

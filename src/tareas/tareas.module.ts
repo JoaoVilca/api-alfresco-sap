@@ -7,6 +7,8 @@ import { AzureStorageModule } from 'src/azure-storage/azure-storage.module';
 @Module({
   controllers: [TareasController],
   providers: [TareasService],
-  imports: [AzureStorageModule]
+  imports: [
+    //AzureStorageModule, 
+    AlfrescoModule]
 })
 export class TareasModule {}

@@ -9,10 +9,11 @@ import { AzureStorageModule } from './azure-storage/azure-storage.module';
 
 @Module({
   imports: [ConfigModule.forRoot({isGlobal:true}), 
-    //AlfrescoModule, 
+    AlfrescoModule, 
     DatabaseModule, 
     TareasModule, 
-    AzureStorageModule],
+    //AzureStorageModule
+  ],
   controllers: [AppController],
   providers: [AppService]
 })

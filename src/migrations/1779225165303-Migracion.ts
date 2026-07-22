@@ -16,5 +16,4 @@ export class Migracion1779225165303 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "sap_int_digita_doc" ADD "IDBlob" varchar(100)`);
         await queryRunner.query(`DROP TABLE "sap_int_digita_doc"`);
     }
-
 }
