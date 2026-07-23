@@ -28,6 +28,15 @@ export function moverArchivo(filename: string, origen: string, destino: string, 
     }
 }
 
+export function eliminarArchivo(path: string, file: string, mensaje: string){
+    try {
+        fs.unlinkSync(path+file);                // Eliminar archivo original
+        console.log(`${mensaje}: ${file}`);
+    } catch (error) {
+        console.error(`Error al eliminar el archivo "${file}":`, error);
+    }
+}
+
 export function formatFilenameSolped(originalName: string) {
     // Regex para separar: numeroPrincipal - posicion .extension
     const regex = /^(\d+)-([a-zA-Z0-9\s]+)-([a-zA-Z0-9\s]+)(\.\w+)$/;

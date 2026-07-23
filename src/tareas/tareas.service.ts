@@ -27,7 +27,7 @@ export class TareasService implements OnModuleInit {
         //console.log(fechaCompleta)
 
         //this.azureStorageService.uploadAllFiles();
-        //this.alfrescoServices.uploadAllFiles();
+        this.alfrescoServices.uploadAllFiles();
       },
       null,            // onComplete
       true,            // start

@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post, Query, UploadedFile } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Res, UploadedFile } from '@nestjs/common';
 import { AlfrescoService } from './alfresco.service';
 import { ApiBasicAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
+import { Response } from 'express';
 
 @ApiTags('nodo')
 @ApiBasicAuth()
@@ -14,6 +15,21 @@ export class AlfrescoController {
     @Get()
     async getNodeAlfresco(@Query('nodo') nodo: string,) {
         return this.alfrescoService.getAlfrescoFile(nodo);
+    }
+
+    @Get('documentos/:nodeId')
+    async visualizarDocumento(
+        @Param('nodeId') nodeId: string,
+        @Res() res: Response,
+    ) {
+        const file = await this.alfrescoService.getAlfrescoFile(nodeId);
+
+        res.set({
+            'Content-Type': file.contentType,
+            'Content-Disposition': 'inline',
+        });
+
+        res.send(file.data);
     }
 
     @Post('upload-to-alfresco')

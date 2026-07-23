@@ -7,7 +7,7 @@ import path from 'path';
 import { ArchivosEntity } from './entities/archivos.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { generarSufijoArchivo, moverArchivo, formatFilenameSolped, formatFilename } from 'src/common/utils';
+import { generarSufijoArchivo, moverArchivo, formatFilenameSolped, formatFilename, eliminarArchivo } from 'src/common/utils';
 import { DateTime } from 'luxon';
 
 @Injectable()
@@ -72,24 +72,38 @@ export class AlfrescoService {
 
         const response = await axios.get(url, {
             auth: { username, password },
-            //headers: { Accept: 'application/json' },
+            headers: { Accept: '*/*' },
         });
         return response.data;
     }
 
-    async getAlfrescoFile(nodo): Promise<any[]> {
-
-        const endpoint = '/content'
-
+    async getAlfrescoFile(nodo: string) {
+        const endpoint = '/content';
+    
         const url = this.urlAlfrescoGet! + nodo + endpoint;
+    
         const username = this.username!;
         const password = this.password!;
-
+    
+        console.log('Alfresco URL:', url);
+    
         const response = await axios.get(url, {
-            auth: { username, password },
-            //headers: { Accept: 'application/json' },
+            auth: {
+                username,
+                password,
+            },
+            responseType: 'arraybuffer',
+            headers: {
+                Accept: '*/*',
+            },
         });
-        return response.data;
+    
+        return {
+            data: response.data,
+            contentType: response.headers['content-type'],
+            contentDisposition: response.headers['content-disposition'],
+            contentLength: response.headers['content-length'],
+        };
     }
 
     /**
@@ -331,19 +345,25 @@ export class AlfrescoService {
         //this.moverArchivoBackup(id_node.name.slice(0, 14) + id_node.name.slice(-4))
         switch (folder) {
             case 'FI':
-                moverArchivo(file, this.localFilePathFI, this.localFileBackupFI, 'Archivo movido a la carpeta BACKUP_GENERAL/DOCUMENTOSFI:')
+                eliminarArchivo(this.localFilePathFI,file,'Archivo eliminado')
+                //moverArchivo(file, this.localFilePathFI, this.localFileBackupFI, 'Archivo movido a la carpeta BACKUP_GENERAL/DOCUMENTOSFI:')
+                console.log(file+'---'+this.localFilePathFI+'---'+this.localFileBackupFI)
                 break;
             case 'SOLPED':
-                moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/SOLPED:')
+                eliminarArchivo(this.localFilePathMM! + folder + '\\',file,'Archivo eliminado')
+                //moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/SOLPED:')
                 break;
             case 'PEDIDOS':
-                moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/PEDIDOS:')
+                eliminarArchivo(this.localFilePathMM! + folder + '\\',file,'Archivo eliminado')
+                //moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/PEDIDOS:')
                 break;
             case 'CONTRATOS':
-                moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/CONTRATOS:')
+                eliminarArchivo(this.localFilePathMM! + folder + '\\',file,'Archivo eliminado')
+                //moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/CONTRATOS:')
                 break;
             case 'HES':
-                moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/HES:')
+                eliminarArchivo(this.localFilePathMM! + folder + '\\',file,'Archivo eliminado')
+                //moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/HES:')
                 break;
         }
 
