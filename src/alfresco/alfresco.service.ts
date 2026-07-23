@@ -345,25 +345,25 @@ export class AlfrescoService {
         //this.moverArchivoBackup(id_node.name.slice(0, 14) + id_node.name.slice(-4))
         switch (folder) {
             case 'FI':
-                eliminarArchivo(this.localFilePathFI,file,'Archivo eliminado')
-                //moverArchivo(file, this.localFilePathFI, this.localFileBackupFI, 'Archivo movido a la carpeta BACKUP_GENERAL/DOCUMENTOSFI:')
+                //eliminarArchivo(this.localFilePathFI,file,'Archivo eliminado')
+                moverArchivo(file, this.localFilePathFI, this.localFileBackupFI, 'Archivo movido a la carpeta BACKUP_GENERAL/DOCUMENTOSFI:')
                 console.log(file+'---'+this.localFilePathFI+'---'+this.localFileBackupFI)
                 break;
             case 'SOLPED':
-                eliminarArchivo(this.localFilePathMM! + folder + '\\',file,'Archivo eliminado')
-                //moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/SOLPED:')
+                //eliminarArchivo(this.localFilePathMM! + folder + '\\',file,'Archivo eliminado')
+                moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/SOLPED:')
                 break;
             case 'PEDIDOS':
-                eliminarArchivo(this.localFilePathMM! + folder + '\\',file,'Archivo eliminado')
-                //moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/PEDIDOS:')
+                //eliminarArchivo(this.localFilePathMM! + folder + '\\',file,'Archivo eliminado')
+                moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/PEDIDOS:')
                 break;
             case 'CONTRATOS':
-                eliminarArchivo(this.localFilePathMM! + folder + '\\',file,'Archivo eliminado')
-                //moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/CONTRATOS:')
+                //eliminarArchivo(this.localFilePathMM! + folder + '\\',file,'Archivo eliminado')
+                moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/CONTRATOS:')
                 break;
             case 'HES':
-                eliminarArchivo(this.localFilePathMM! + folder + '\\',file,'Archivo eliminado')
-                //moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/HES:')
+                //eliminarArchivo(this.localFilePathMM! + folder + '\\',file,'Archivo eliminado')
+                moverArchivo(file, this.localFilePathMM! + folder + '\\', this.localFileBackupMM + folder + '\\', 'Archivo movido a la carpeta BACKUP_GENERAL/HES:')
                 break;
         }
 
